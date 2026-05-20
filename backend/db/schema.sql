@@ -1,4 +1,3 @@
--- Active: 1779238643970@@127.0.0.1@5432@medistock@public
 -- PostgreSQL schema for Medistock backend
 
 CREATE TABLE IF NOT EXISTS users (
