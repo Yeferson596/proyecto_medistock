@@ -2,6 +2,39 @@
 
 Este branch `main` contiene solo el backend de Medistock.
 
+## Arquitectura del backend
+
+El backend está organizado en módulos por dominio, con separación de responsabilidades en:
+
+- `routes`: define los endpoints HTTP y maneja solicitudes/respuestas.
+- `service`: contiene la lógica de negocio y validaciones.
+- `repository`: encapsula las consultas SQL y el acceso a PostgreSQL.
+- `shared`: agrupa utilidades comunes, tipos, autenticación y conexión a la base de datos.
+
+Los módulos principales son:
+
+- `products`
+- `orders`
+- `users`
+- `bank`
+- `mercadopago`
+- `exchange`
+- `auth`
+
+Esta estructura permite que la lógica de negocio sea reutilizable, testeable y desacoplada de Express.
+
+## Stack tecnológico
+
+- Node.js
+- TypeScript
+- Express
+- PostgreSQL con `pg`
+- `jsonwebtoken` para JWT
+- `bcrypt` para hash de contraseñas
+- `swagger-ui-express` para documentación OpenAPI
+- SDK de `mercadopago` para pasarela de pago
+- API externa de conversión de divisas con `exchangerate.host`
+
 ## Ejecutar backend
 
 1. cd backend
