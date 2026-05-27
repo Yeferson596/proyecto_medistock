@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0066CC;
+  --color-secondary: #00B4D8;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&family=JetBrains+Mono&display=swap');
+
+  body {
+    @apply font-sans bg-slate-50 text-slate-900;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+.glass {
+  @apply bg-white/80 backdrop-blur-md border border-white/20;
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
+/* Global enhanced focus and button styles */
+:root {
+  --primary-opaque: rgba(0,102,204,0.12);
+}
+
+input[type="text"], input[type="password"], textarea, select {
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+}
+
+:focus-visible {
+  outline: none;
+}
+
+input:focus, textarea:focus, select:focus {
+  box-shadow: 0 6px 18px rgba(2,6,23,0.05), 0 0 0 4px rgba(0,102,204,0.08);
+  border-color: #0077cc;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.12);
+  padding: 0.7rem 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.modal-backdrop {
+  background: rgba(12,18,28,0.6);
+  backdrop-filter: blur(6px) saturate(120%);
+}
+
+.muted-note {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+/* Form card used inside modals */
+.form-card {
+  background: #ffffff;
+  border-radius: 30px;
+  border: 1px solid rgba(15,23,42,0.06);
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(15,23,42,0.08);
+  max-width: 460px;
+}
+
+.input-pill {
+  border-radius: 20px;
+  padding: 0.95rem 1.1rem;
+  background: #f4f7fb;
+  border: 1px solid rgba(148,163,184,0.18);
+}
+
+.primary-cta {
+  background: #003366;
+  color: #fff;
+  border-radius: 24px;
+  height: 56px;
+  padding: 0 1.5rem;
+  box-shadow: 0 14px 32px rgba(3,43,84,0.12);
+  font-weight: 700;
+}
+
+.benefits-card {
+  background: rgba(226,242,255,0.9);
+  border: 1px solid rgba(148,163,184,0.16);
+  border-radius: 28px;
+  padding: 24px;
+  min-width: 280px;
+}
+
+.benefits-card h4 {
+  color: #0f172a;
+}
+
+/* Modal panel sizing for responsiveness to match mock */
+.modal-panel {
+  width: 100%;
+  max-width: 720px;
+  border-radius: 28px;
+}
+
+@media (max-width: 640px) {
+  .modal-panel { max-width: 92%; border-radius: 18px; }
+  .form-card { padding: 18px; border-radius: 22px; max-width: 100%; }
+  .primary-cta { border-radius: 20px; height: 52px; }
+  .benefits-card { padding: 18px; border-radius: 24px; }
+}
