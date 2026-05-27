@@ -2,6 +2,27 @@
 
 Este branch contiene solo el frontend de Medistock.
 
+## Arquitectura del frontend
+
+El frontend está construido con React y TypeScript usando Vite. La aplicación sigue una arquitectura basada en:
+
+- `services`: capa de acceso a API que centraliza las llamadas HTTP en `frontend/src/services/http.ts`.
+- `store`: estado global manejado con `zustand`, incluyendo usuario, carrito y datos cargados.
+- `components`: interfaz de usuario organizada por dominio y por página.
+- `modules`: páginas principales y flujos de negocio como catálogo, checkout y panel de administración.
+
+El frontend no accede directamente a la base de datos; todas las llamadas van al backend a través de `VITE_API_URL`.
+
+## Stack tecnológico
+
+- React
+- TypeScript
+- Vite
+- Zustand
+- Tailwind / estilos CSS (usados en componentes)
+- MercadoPago para checkout real
+- API de banco interno para simulación de pagos
+
 ## Ejecutar frontend
 
 1. cd frontend
