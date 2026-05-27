@@ -1,22 +1,13 @@
 import { Router } from 'express';
-import { query } from '../../shared/db';
-import { createId } from '../../shared/utils';
-import type { User } from '../../shared/types';
-
-const mapUser = (row: any): User => ({
-  id: row.id,
-  name: row.name,
-  email: row.email,
-  role: row.role,
-  institution: row.institution ?? undefined
-});
+import * as service from './users.service';
+import { requireAuth } from '../../shared/auth';
 
 export const usersRouter = Router();
 
 usersRouter.get('/', async (_req, res, next) => {
   try {
-    const result = await query<User>('SELECT * FROM users ORDER BY name');
-    return res.json(result.rows.map(mapUser));
+    const items = await service.listUsers();
+    return res.json(items);
   } catch (error) {
     next(error);
   }
@@ -24,76 +15,40 @@ usersRouter.get('/', async (_req, res, next) => {
 
 usersRouter.get('/:id', async (req, res, next) => {
   try {
-    const result = await query<User>('SELECT * FROM users WHERE id = $1', [req.params.id]);
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    return res.json(mapUser(result.rows[0]));
+    const item = await service.getUser(req.params.id);
+    if (!item) return res.status(404).json({ message: 'Usuario no encontrado' });
+    return res.json(item);
   } catch (error) {
     next(error);
   }
 });
 
-usersRouter.post('/', async (req, res, next) => {
+usersRouter.post('/', requireAuth, async (req, res, next) => {
   try {
-    const payload = req.body as Partial<User>;
-    if (!payload.name || !payload.email || !payload.role) {
-      return res.status(400).json({ message: 'name, email y role son obligatorios' });
-    }
+    const payload = req.body as any;
+    const created = await service.createNewUser(payload);
+    return res.status(201).json(created);
+  } catch (error: any) {
+    if (error.message) return res.status(400).json({ message: error.message });
+    next(error);
+  }
+});
 
-    const user: User = {
-      id: createId('u'),
-      name: payload.name,
-      email: payload.email,
-      role: payload.role,
-      institution: payload.institution
-    };
-
-    const result = await query<User>(
-      'INSERT INTO users (id, name, email, role, institution) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [user.id, user.name, user.email, user.role, user.institution]
-    );
-
-    return res.status(201).json(mapUser(result.rows[0]));
+usersRouter.put('/:id', requireAuth, async (req, res, next) => {
+  try {
+    const updated = await service.updateExistingUser(req.params.id, req.body);
+    if (!updated) return res.status(404).json({ message: 'Usuario no encontrado' });
+    return res.json(updated);
   } catch (error) {
     next(error);
   }
 });
 
-usersRouter.put('/:id', async (req, res, next) => {
+usersRouter.delete('/:id', requireAuth, async (req, res, next) => {
   try {
-    const existingResult = await query<User>('SELECT * FROM users WHERE id = $1', [req.params.id]);
-    if (existingResult.rowCount === 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    const existing = mapUser(existingResult.rows[0]);
-    const payload = req.body as Partial<User>;
-    const updated = {
-      ...existing,
-      ...payload
-    };
-
-    const result = await query<User>(
-      'UPDATE users SET name = $1, email = $2, role = $3, institution = $4 WHERE id = $5 RETURNING *',
-      [updated.name, updated.email, updated.role, updated.institution, req.params.id]
-    );
-
-    return res.json(mapUser(result.rows[0]));
-  } catch (error) {
-    next(error);
-  }
-});
-
-usersRouter.delete('/:id', async (req, res, next) => {
-  try {
-    const result = await query<User>('DELETE FROM users WHERE id = $1 RETURNING *', [req.params.id]);
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    return res.json(mapUser(result.rows[0]));
+    const removed = await service.removeUser(req.params.id);
+    if (!removed) return res.status(404).json({ message: 'Usuario no encontrado' });
+    return res.json(removed);
   } catch (error) {
     next(error);
   }

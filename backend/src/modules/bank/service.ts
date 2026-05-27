@@ -1,31 +1,29 @@
-import { BankTransaction } from '../../shared/types';
+import type { BankTransaction } from '../../shared/types';
+import * as repo from './bank.repository';
 
-// Simulación de base de datos en memoria
-const accounts = new Map<string, number>([
-  ['ACC-001', 5000],
-  ['ACC-002', 3000],
-  ['ACC-ADMIN', 10000]
-]);
+const DEFAULT_INITIAL_BALANCE = 5000;
 
-const transactions: BankTransaction[] = [];
+const makeId = () => `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
 export const bankService = {
-  getBalance: (accountId: string) => {
-    if (!accounts.has(accountId)) {
-      accounts.set(accountId, 5000); // Saldo inicial por defecto
+  getBalance: async (accountId: string) => {
+    const r = await repo.getAccount(accountId);
+    if (r.rowCount === 0) {
+      await repo.createAccount(accountId, DEFAULT_INITIAL_BALANCE);
+      return DEFAULT_INITIAL_BALANCE;
     }
-    return accounts.get(accountId) || 0;
+    return Number(r.rows[0].balance);
   },
 
-  processPayment: (accountId: string, amount: number, description: string) => {
-    const balance = bankService.getBalance(accountId);
+  processPayment: async (accountId: string, amount: number, description: string) => {
+    const balance = await bankService.getBalance(accountId);
     if (balance < amount) return null;
 
     const newBalance = balance - amount;
-    accounts.set(accountId, newBalance);
+    await repo.updateBalance(accountId, newBalance);
 
     const transaction: BankTransaction = {
-      id: `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      id: makeId(),
       accountId,
       type: 'debit',
       amount,
@@ -34,17 +32,17 @@ export const bankService = {
       status: 'success'
     };
 
-    transactions.unshift(transaction);
+    await repo.insertTransaction(transaction);
     return { transactionId: transaction.id, newBalance };
   },
 
-  deposit: (accountId: string, amount: number) => {
-    const balance = bankService.getBalance(accountId);
+  deposit: async (accountId: string, amount: number) => {
+    const balance = await bankService.getBalance(accountId);
     const newBalance = balance + amount;
-    accounts.set(accountId, newBalance);
+    await repo.updateBalance(accountId, newBalance);
 
     const transaction: BankTransaction = {
-      id: `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      id: makeId(),
       accountId,
       type: 'credit',
       amount,
@@ -53,11 +51,12 @@ export const bankService = {
       status: 'success'
     };
 
-    transactions.unshift(transaction);
+    await repo.insertTransaction(transaction);
     return { transactionId: transaction.id, newBalance };
   },
 
-  getTransactions: (accountId: string, limit: number = 50) => {
-    return transactions.filter(t => t.accountId === accountId).slice(0, limit);
+  getTransactions: async (accountId: string, limit: number = 50) => {
+    const r = await repo.getTransactions(accountId, limit);
+    return r.rows;
   }
 };
