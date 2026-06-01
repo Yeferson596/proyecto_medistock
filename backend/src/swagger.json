@@ -1,0 +1,320 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Medistock API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" },
+                  "role": { "type": "string" },
+                  "institution": { "type": "string" }
+                },
+                "required": ["name", "email", "password", "role"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created" },
+          "400": { "description": "Invalid request" }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Authenticate a user and obtain a JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Authenticated" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "summary": "List all products",
+        "responses": { "200": { "description": "Product list" } }
+      },
+      "post": {
+        "summary": "Create a new product",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "sku": { "type": "string" },
+                  "price": { "type": "number" },
+                  "category": { "type": "string" },
+                  "stock": { "type": "number" },
+                  "minStock": { "type": "number" },
+                  "description": { "type": "string" },
+                  "image": { "type": "string", "format": "uri" }
+                },
+                "required": ["name", "sku"]
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Product created" }, "400": { "description": "Invalid request" } }
+      }
+    },
+    "/api/v1/products/{id}": {
+      "get": {
+        "summary": "Get a product by ID",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Product" }, "404": { "description": "Not found" } }
+      },
+      "put": {
+        "summary": "Update a product",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Updated" }, "404": { "description": "Not found" } }
+      },
+      "delete": {
+        "summary": "Delete a product",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Deleted" }, "404": { "description": "Not found" } }
+      }
+    },
+    "/api/v1/orders": {
+      "get": { "summary": "List orders", "responses": { "200": { "description": "Orders" } } },
+      "post": {
+        "summary": "Create a new order",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "customerId": { "type": "string" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productId": { "type": "string" },
+                        "quantity": { "type": "number" }
+                      },
+                      "required": ["productId", "quantity"]
+                    }
+                  }
+                },
+                "required": ["customerId", "items"]
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Order created" }, "400": { "description": "Invalid request" } }
+      }
+    },
+    "/api/v1/orders/{id}": {
+      "get": {
+        "summary": "Get an order by ID",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Order" }, "404": { "description": "Not found" } }
+      },
+      "put": {
+        "summary": "Update an order",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "object" } }
+          }
+        },
+        "responses": { "200": { "description": "Updated" }, "404": { "description": "Not found" } }
+      },
+      "delete": {
+        "summary": "Delete an order",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Deleted" }, "404": { "description": "Not found" } }
+      }
+    },
+    "/api/v1/users": {
+      "get": { "summary": "List users", "responses": { "200": { "description": "Users" } } },
+      "post": {
+        "summary": "Create a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "role": { "type": "string" },
+                  "institution": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["name", "email", "role"]
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "User created" }, "400": { "description": "Invalid request" } }
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "summary": "Get a user by ID",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "User" }, "404": { "description": "Not found" } }
+      },
+      "put": {
+        "summary": "Update a user",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "object" } }
+          }
+        },
+        "responses": { "200": { "description": "Updated" }, "404": { "description": "Not found" } }
+      },
+      "delete": {
+        "summary": "Delete a user",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Deleted" }, "404": { "description": "Not found" } }
+      }
+    },
+    "/api/v1/bank/process-payment": {
+      "post": {
+        "summary": "Process a bank payment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "accountId": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "description": { "type": "string" }
+                },
+                "required": ["accountId", "amount", "description"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Payment processed" }, "400": { "description": "Insufficient funds" } }
+      }
+    },
+    "/api/v1/bank/balance/{accountId}": {
+      "get": {
+        "summary": "Get account balance",
+        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Balance" } }
+      }
+    },
+    "/api/v1/bank/transactions/{accountId}": {
+      "get": {
+        "summary": "List bank transactions for an account",
+        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "limit", "in": "query", "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Transactions" } }
+      }
+    },
+    "/api/v1/bank/deposit": {
+      "post": {
+        "summary": "Deposit funds into a bank account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "accountId": { "type": "string" },
+                  "amount": { "type": "number" }
+                },
+                "required": ["accountId", "amount"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Deposit successful" }, "400": { "description": "Invalid request" } }
+      }
+    },
+    "/api/v1/mercadopago/create-preference": {
+      "post": {
+        "summary": "Create a Mercado Pago payment preference",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": { "type": "string" },
+                        "unit_price": { "type": "number" },
+                        "quantity": { "type": "number" },
+                        "currency_id": { "type": "string" }
+                      },
+                      "required": ["title", "unit_price", "quantity"]
+                    }
+                  },
+                  "external_reference": { "type": "string" }
+                },
+                "required": ["items"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Preference created" }, "400": { "description": "Invalid request" }, "500": { "description": "Payment configuration issue" } }
+      }
+    },
+    "/api/v1/exchange/convert": {
+      "get": {
+        "summary": "Convert currency using exchangerate.host",
+        "parameters": [
+          { "name": "from", "in": "query", "schema": { "type": "string" } },
+          { "name": "to", "in": "query", "schema": { "type": "string" } },
+          { "name": "amount", "in": "query", "schema": { "type": "number" } }
+        ],
+        "responses": { "200": { "description": "Conversion result" } }
+      }
+    }
+  }
+}
