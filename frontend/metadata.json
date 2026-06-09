@@ -1,0 +1,13 @@
+{
+  "name": "MEDISTOCK",
+  "description": "Plataforma integral de gestión de suministros médicos, portal B2B y logística hospitalaria.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "E-commerce",
+    "B2B Portal",
+    "Inventory Management",
+    "Logistics PWA"
+  ]
+}
