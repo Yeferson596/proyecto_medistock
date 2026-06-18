@@ -117,15 +117,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### API externa de moneda
 - GET `/api/v1/exchange/convert?from=CLP&to=USD&amount=100`
 
-## Calidad de software
-
-La carpeta `backend/quality/` contiene la documentación de calidad que implementa los elementos del ejemplo entregado:
-
-- `ERS_Medistock.md`
-- `Plan_de_pruebas.md`
-- `Listado_de_defectos.md`
-- `Informe_de_calidad.md`
-
 ## Nota
 
 El frontend está en una rama separada llamada `Frontend`, con su propio README. Este backend expone tanto APIs internas como documentación Swagger y un proxy a la API externa de tasas de cambio.
