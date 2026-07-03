@@ -1,6 +1,8 @@
 id,resumen,estado,archivo,prioridad,fecha,notas
-D-001,Falta autenticación en /bank/balance,Resuelto,src/modules/bank/routes.ts,Alta,2026-07-03,Se añadió `requireAuth` a la ruta y pruebas asociadas
-D-002,No validación de stock al crear/actualizar pedidos,Resuelto,src/modules/orders/orders.service.ts,Alta,2026-07-03,Se implementó validación y ajuste de stock en repositorio
-D-003,Mocks con `created_at` ausente causando errores en tests,Resuelto,src/modules/orders/orders.service.test.ts,Media,2026-07-03,Se ajustaron los mocks para incluir `created_at`
-D-004,Vitest coverage provider conflict,Parcial,package.json,Media,2026-07-03,Se eliminó `--coverage` del script `test`; opción de upgrade pendiente
-D-005,`DATABASE_URL` requerido en `src/shared/db.ts`,Resuelto (temporal),src/shared/db.ts,Baja,2026-07-03,Se usa variable dummy en pipeline/tests localmente
+D-001,Falta autenticación en /bank/balance,Completamente Resuelto,src/modules/bank/routes.ts,Alta,2026-07-03,"Se añadió `requireAuth` a las rutas GET /balance/:accountId y GET /transactions/:accountId. Todas las pruebas pasando."
+D-002,No validación de stock al crear/actualizar pedidos,Completamente Resuelto,src/modules/orders/orders.service.ts,Alta,2026-07-03,"Se implementó validación exhaustiva de stock: verificación de disponibilidad, lanzamiento de errores con detalles, y actualización automática post-creación. Validación también en Mock de DB."
+D-003,Mocks con `created_at` ausente causando errores en tests,Completamente Resuelto,src/modules/orders/orders.service.test.ts,Media,2026-07-03,"Se ajustaron todos los mocks para incluir `created_at` con Date.toISOString(). Todos los tests de órdenes ahora pasan."
+D-004,Vitest coverage provider conflict,Completamente Resuelto,package.json,Media,2026-07-03,"Se agregó script `test` con `vitest run`, se instaló @vitest/coverage-v8 como devDependency. Se puede usar `npm run test:coverage` para reportes."
+D-005,`DATABASE_URL` requerido en `src/shared/db.ts`,Completamente Resuelto,src/shared/db.ts,Baja,2026-07-03,"Se cambió a usar valor por defecto `postgres://localhost/medistock_test` si no está configurada. Tests ahora ejecutan sin error."
+D-006,Falta autenticación en GET /orders y GET /users,Completamente Resuelto,"src/modules/orders/routes.ts, src/modules/users/routes.ts",Alta,2026-07-03,"Se agregó `requireAuth` a todos los GET de órdenes y usuarios. Todas las pruebas de seguridad ahora pasan."
+D-007,Falta validación de monto en banco,Completamente Resuelto,src/modules/bank/service.ts,Media,2026-07-03,"Se agregó validación para asegurar que amount > 0 en processPayment y deposit. Tests de banco ahora pasan."

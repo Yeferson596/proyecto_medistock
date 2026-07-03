@@ -16,6 +16,7 @@ export const bankService = {
   },
 
   processPayment: async (accountId: string, amount: number, description: string) => {
+    if (!amount || amount <= 0) throw new Error('amount debe ser mayor a 0');
     const balance = await bankService.getBalance(accountId);
     if (balance < amount) return null;
 
@@ -37,6 +38,7 @@ export const bankService = {
   },
 
   deposit: async (accountId: string, amount: number) => {
+    if (!amount || amount <= 0) throw new Error('amount debe ser mayor a 0');
     const balance = await bankService.getBalance(accountId);
     const newBalance = balance + amount;
     await repo.updateBalance(accountId, newBalance);

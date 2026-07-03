@@ -30,13 +30,31 @@ export const createNewOrder = async (payload: Partial<Order>) => {
 
   const productIds = payload.items.map((i: OrderItem) => i.productId);
   const productResult = await productRepo.getProductsByIds(productIds);
-  const priceMap = new Map(productResult.rows.map((p: any) => [p.id, Number(p.price)]));
+  
+  // Crear mapa de productos con stock
+  const productMap = new Map(productResult.rows.map((p: any) => [p.id, { 
+    price: Number(p.price),
+    stock: Number(p.stock) 
+  }]));
 
-  const items = (payload.items as OrderItem[]).map((item) => ({
-    productId: item.productId,
-    quantity: Number(item.quantity ?? 1),
-    price: priceMap.get(item.productId) ?? Number(item.price ?? 0)
-  }));
+  // Validar stock disponible para cada producto
+  const items: OrderItem[] = [];
+  for (const item of payload.items as OrderItem[]) {
+    const product = productMap.get(item.productId);
+    if (!product) throw new Error(`Producto ${item.productId} no encontrado`);
+    
+    const quantity = Number(item.quantity ?? 1);
+    if (quantity <= 0) throw new Error(`Cantidad debe ser mayor a 0 para ${item.productId}`);
+    if (quantity > product.stock) {
+      throw new Error(`Stock insuficiente para ${item.productId}. Disponible: ${product.stock}, Solicitado: ${quantity}`);
+    }
+    
+    items.push({
+      productId: item.productId,
+      quantity,
+      price: product.price
+    });
+  }
 
   const total = items.reduce((s, it) => s + it.price * it.quantity, 0);
   const order: Order = {
@@ -51,6 +69,14 @@ export const createNewOrder = async (payload: Partial<Order>) => {
   };
 
   const r = await repo.createOrder(order);
+  
+  // Actualizar stock de productos después de crear orden
+  for (const item of items) {
+    await productRepo.updateProduct(item.productId, {
+      stock: (productMap.get(item.productId)?.stock ?? 0) - item.quantity
+    } as any);
+  }
+  
   return mapOrderRow(r.rows[0]);
 };
 

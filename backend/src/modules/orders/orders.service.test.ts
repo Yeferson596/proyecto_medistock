@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock del repository ANTES de importar el servicio
 vi.mock('../products/products.repository', () => ({
-  getProductsByIds: vi.fn()
+  getProductsByIds: vi.fn(),
+  updateProduct: vi.fn()
 }));
 
 vi.mock('./orders.repository', () => ({
@@ -27,7 +28,7 @@ describe('Orders Service - Unit tests', () => {
 
   it('CP-02 - debe lanzar error si la cantidad supera el stock', async () => {
     vi.mocked(productRepo.getProductsByIds).mockResolvedValue({
-      rows: [{ id: 'p001', price: 100 }],
+      rows: [{ id: 'p001', price: 100, stock: 5 }],
       rowCount: 1
     } as any);
 
@@ -36,12 +37,17 @@ describe('Orders Service - Unit tests', () => {
       items: [{ productId: 'p001', quantity: 10 }]
     };
 
-    await expect(createNewOrder(payload)).rejects.toThrow();
+    await expect(createNewOrder(payload)).rejects.toThrow('Stock insuficiente');
   });
 
   it('CP-02b - debe crear pedido si stock es suficiente', async () => {
     vi.mocked(productRepo.getProductsByIds).mockResolvedValue({
-      rows: [{ id: 'p001', price: 100 }],
+      rows: [{ id: 'p001', price: 100, stock: 10 }],
+      rowCount: 1
+    } as any);
+
+    vi.mocked(productRepo.updateProduct).mockResolvedValue({
+      rows: [{ id: 'p001', stock: 8 }],
       rowCount: 1
     } as any);
 

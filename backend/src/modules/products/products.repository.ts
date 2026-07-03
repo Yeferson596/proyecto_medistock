@@ -10,7 +10,7 @@ export const getProductById = async (id: string) => {
 };
 
 export const getProductsByIds = async (ids: string[]) => {
-  return query<Product>('SELECT id, price FROM products WHERE id = ANY($1)', [ids]);
+  return query<Product>('SELECT id, price, stock FROM products WHERE id = ANY($1)', [ids]);
 };
 
 export const createProduct = async (product: Product) => {
