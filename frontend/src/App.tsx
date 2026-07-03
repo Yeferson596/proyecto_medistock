@@ -21,13 +21,14 @@ function ScrollToTop() {
 }
 
 export default function App() {
-  const { notification, clearNotification, fetchProducts, fetchOrders, fetchUsers } = useStore();
+  const { notification, clearNotification } = useStore();
+  const { fetchProducts, fetchOrders, fetchUsers } = useStore();
 
   useEffect(() => {
-    void fetchProducts();
-    void fetchOrders();
-    void fetchUsers();
-  }, [fetchOrders, fetchProducts, fetchUsers]);
+    void fetchProducts().catch(console.error);
+    void fetchOrders().catch(console.error);
+    void fetchUsers().catch(console.error);
+  }, []);
 
   return (
     <Router>
@@ -40,9 +41,7 @@ export default function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/logistics" element={<LogisticsPWA />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/cart" element={<CartCheckout />} />
         <Route path="/checkout/mercadopago-simulacion" element={<MercadoPagoMockPage />} />
-
       </Routes>
       <AnimatePresence>
         {notification && (

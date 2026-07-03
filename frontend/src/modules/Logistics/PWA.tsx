@@ -4,7 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
-  Barcode, 
+  QrCode, 
   Truck,
   Camera,
   History,
@@ -136,7 +136,7 @@ export const LogisticsPWA = () => {
                    <input type="text" placeholder="Buscar por SKU..." className="w-full bg-slate-800/80 border border-white/10 rounded-3xl h-14 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/40 focus:border-primary/40 focus:bg-slate-700/70 transition-all placeholder:text-slate-500 shadow-lg shadow-black/10" />
                 </div>
                 <Button className="h-14 w-14 rounded-3xl bg-gradient-to-br from-white to-cyan-50 text-slate-900 hover:from-cyan-50 hover:to-white shadow-xl shadow-cyan-500/10 ring-4 ring-white/5" onClick={() => setActiveTab('camera')}>
-                  <Barcode size={22} />
+                  <QrCode size={22} />
                 </Button>
               </div>
 

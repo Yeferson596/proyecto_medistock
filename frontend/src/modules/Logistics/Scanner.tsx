@@ -1,5 +1,5 @@
 import React from 'react';
-import { Barcode, Camera, MapPin, Package } from 'lucide-react';
+import { QrCode, Camera, MapPin, Package } from 'lucide-react';
 import { Badge, Button, Card } from '@/src/components/ui/Base';
 
 export type LogisticsTask = {
@@ -180,7 +180,7 @@ export const LogisticsScanner: React.FC<LogisticsScannerProps> = ({ pickupTasks,
               className="rounded-full border-white/10 text-white hover:bg-white/10"
               onClick={() => setScannerIndex((currentIndex) => (currentIndex + 1) % pickupTasks.length)}
             >
-              <Barcode size={16} />
+              <QrCode size={16} />
               Simular escaneo
             </Button>
             <Button className="rounded-full bg-cyan-400 text-slate-950 hover:bg-cyan-300" onClick={onGoToRoute}>
