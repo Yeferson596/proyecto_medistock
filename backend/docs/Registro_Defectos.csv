@@ -1,0 +1,6 @@
+id,resumen,estado,archivo,prioridad,fecha,notas
+D-001,Falta autenticación en /bank/balance,Resuelto,src/modules/bank/routes.ts,Alta,2026-07-03,Se añadió `requireAuth` a la ruta y pruebas asociadas
+D-002,No validación de stock al crear/actualizar pedidos,Resuelto,src/modules/orders/orders.service.ts,Alta,2026-07-03,Se implementó validación y ajuste de stock en repositorio
+D-003,Mocks con `created_at` ausente causando errores en tests,Resuelto,src/modules/orders/orders.service.test.ts,Media,2026-07-03,Se ajustaron los mocks para incluir `created_at`
+D-004,Vitest coverage provider conflict,Parcial,package.json,Media,2026-07-03,Se eliminó `--coverage` del script `test`; opción de upgrade pendiente
+D-005,`DATABASE_URL` requerido en `src/shared/db.ts`,Resuelto (temporal),src/shared/db.ts,Baja,2026-07-03,Se usa variable dummy en pipeline/tests localmente

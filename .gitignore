@@ -1,0 +1,14 @@
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+.vscode/
+package-lock.json
+package.json
+BANCO_API.md
+QUICKSTART_BANCO.md
