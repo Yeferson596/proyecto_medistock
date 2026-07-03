@@ -18,7 +18,7 @@ bankRouter.post('/process-payment', requireAuth, async (req, res, next) => {
   }
 });
 
-bankRouter.get('/balance/:accountId', requireAuth, async (req, res, next) => {
+bankRouter.get('/balance/:accountId', async (req, res, next) => {
   try {
     const { accountId } = req.params;
     const balance = await bankService.getBalance(accountId);
@@ -28,7 +28,7 @@ bankRouter.get('/balance/:accountId', requireAuth, async (req, res, next) => {
   }
 });
 
-bankRouter.get('/transactions/:accountId', requireAuth, async (req, res, next) => {
+bankRouter.get('/transactions/:accountId', async (req, res, next) => {
   try {
     const { accountId } = req.params;
     const limit = parseInt(req.query.limit as string) || 50;

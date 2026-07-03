@@ -10,21 +10,7 @@ export const getProductById = async (id: string) => {
 };
 
 export const getProductsByIds = async (ids: string[]) => {
-  return query<Product>('SELECT id, price, stock FROM products WHERE id = ANY($1)', [ids]);
-};
-
-export const decreaseProductStock = async (productId: string, quantity: number) => {
-  return query<Product>(
-    'UPDATE products SET stock = stock - $1 WHERE id = $2 RETURNING *',
-    [quantity, productId]
-  );
-};
-
-export const increaseProductStock = async (productId: string, quantity: number) => {
-  return query<Product>(
-    'UPDATE products SET stock = stock + $1 WHERE id = $2 RETURNING *',
-    [quantity, productId]
-  );
+  return query<Product>('SELECT id, price FROM products WHERE id = ANY($1)', [ids]);
 };
 
 export const createProduct = async (product: Product) => {

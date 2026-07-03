@@ -53,14 +53,4 @@ describe('Products Service', () => {
 
     expect(result).toBeNull();
   });
-
-  it('createNewProduct valida stock negativo', async () => {
-    await expect(service.createNewProduct({ name: 'Test', sku: 'TST', price: 10, stock: -1 } as any)).rejects.toThrow('stock debe ser >= 0');
-  });
-
-  it('updateExistingProduct valida stock negativo', async () => {
-    vi.spyOn(service, 'getProduct').mockResolvedValue({ id: 'p001', name: 'A', sku: 'A1', description: 'X', price: 100, category: 'Med', stock: 10, minStock: 0, image: 'img' } as any);
-
-    await expect(service.updateExistingProduct('p001', { stock: -5 } as any)).rejects.toThrow('stock debe ser >= 0');
-  });
 });

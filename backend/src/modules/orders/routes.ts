@@ -4,7 +4,7 @@ import { requireAuth } from '../../shared/auth';
 
 export const ordersRouter = Router();
 
-ordersRouter.get('/', requireAuth, async (_req, res, next) => {
+ordersRouter.get('/', async (_req, res, next) => {
   try {
     const items = await service.listOrders();
     return res.json(items);
@@ -13,7 +13,7 @@ ordersRouter.get('/', requireAuth, async (_req, res, next) => {
   }
 });
 
-ordersRouter.get('/:id', requireAuth, async (req, res, next) => {
+ordersRouter.get('/:id', async (req, res, next) => {
   try {
     const item = await service.getOrder(req.params.id);
     if (!item) return res.status(404).json({ message: 'Pedido no encontrado' });

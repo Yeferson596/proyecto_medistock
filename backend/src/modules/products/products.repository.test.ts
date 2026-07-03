@@ -73,22 +73,4 @@ describe('Products Repository', () => {
     expect(query).toHaveBeenCalledWith('DELETE FROM products WHERE id = $1 RETURNING *', ['p010']);
     expect(result.rows[0].id).toBe('p010');
   });
-
-  it('decreaseProductStock decrementa stock correctamente', async () => {
-    vi.mocked(query).mockResolvedValue({ rows: [{ id: 'p010', stock: 8 }], rowCount: 1 } as any);
-
-    const result = await repo.decreaseProductStock('p010', 2);
-
-    expect(query).toHaveBeenCalledWith('UPDATE products SET stock = stock - $1 WHERE id = $2 RETURNING *', [2, 'p010']);
-    expect(result.rows[0].stock).toBe(8);
-  });
-
-  it('increaseProductStock incrementa stock correctamente', async () => {
-    vi.mocked(query).mockResolvedValue({ rows: [{ id: 'p010', stock: 12 }], rowCount: 1 } as any);
-
-    const result = await repo.increaseProductStock('p010', 2);
-
-    expect(query).toHaveBeenCalledWith('UPDATE products SET stock = stock + $1 WHERE id = $2 RETURNING *', [2, 'p010']);
-    expect(result.rows[0].stock).toBe(12);
-  });
 });

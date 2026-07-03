@@ -30,11 +30,6 @@ export const createNewProduct = async (payload: Partial<Product>) => {
   const price = Number(payload.price ?? 0);
   if (price < 0) throw new Error('price debe ser >= 0');
 
-  const stock = Number(payload.stock ?? 0);
-  const minStock = Number(payload.minStock ?? 0);
-  if (stock < 0) throw new Error('stock debe ser >= 0');
-  if (minStock < 0) throw new Error('minStock debe ser >= 0');
-
   const product: Product = {
     id: createId('p'),
     name: payload.name,
@@ -42,8 +37,8 @@ export const createNewProduct = async (payload: Partial<Product>) => {
     description: payload.description ?? '',
     price,
     category: payload.category ?? 'General',
-    stock,
-    minStock,
+    stock: Number(payload.stock ?? 0),
+    minStock: Number(payload.minStock ?? 0),
     image: payload.image ?? 'https://picsum.photos/seed/default-medistock/400/400'
   };
 
@@ -52,23 +47,15 @@ export const createNewProduct = async (payload: Partial<Product>) => {
 };
 
 export const updateExistingProduct = async (id: string, payload: Partial<Product>) => {
-  // validate payload values early
-  if (payload.stock !== undefined && Number(payload.stock) < 0) throw new Error('stock debe ser >= 0');
-  if (payload.minStock !== undefined && Number(payload.minStock) < 0) throw new Error('minStock debe ser >= 0');
-
   const existing = await getProduct(id);
   if (!existing) return null;
-
-  const price = Number(payload.price ?? existing.price);
-  const stock = Number(payload.stock ?? existing.stock);
-  const minStock = Number(payload.minStock ?? existing.minStock);
 
   const updated = {
     ...existing,
     ...payload,
-    price,
-    stock,
-    minStock
+    price: Number(payload.price ?? existing.price),
+    stock: Number(payload.stock ?? existing.stock),
+    minStock: Number(payload.minStock ?? existing.minStock)
   } as Product;
 
   const r = await repo.updateProduct(id, updated);

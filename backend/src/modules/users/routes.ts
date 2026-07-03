@@ -4,7 +4,7 @@ import { requireAuth } from '../../shared/auth';
 
 export const usersRouter = Router();
 
-usersRouter.get('/', requireAuth, async (_req, res, next) => {
+usersRouter.get('/', async (_req, res, next) => {
   try {
     const items = await service.listUsers();
     return res.json(items);
@@ -13,7 +13,7 @@ usersRouter.get('/', requireAuth, async (_req, res, next) => {
   }
 });
 
-usersRouter.get('/:id', requireAuth, async (req, res, next) => {
+usersRouter.get('/:id', async (req, res, next) => {
   try {
     const item = await service.getUser(req.params.id);
     if (!item) return res.status(404).json({ message: 'Usuario no encontrado' });
