@@ -5,11 +5,11 @@ import type { Order, OrderItem } from '../../shared/types';
 
 const mapOrderRow = (row: any): Order => ({
   id: row.id,
-  customerId: row.customer_id,
+  customerId: row.customerId ?? row.customer_id,
   items: row.items,
   status: row.status,
   total: Number(row.total),
-  createdAt: new Date(row.created_at).toISOString(),
+  createdAt: new Date(row.createdAt ?? row.created_at).toISOString(),
   type: row.type,
   metadata: row.metadata ?? undefined
 });
@@ -25,10 +25,14 @@ export const getOrder = async (id: string) => {
   return mapOrderRow(r.rows[0]);
 };
 
-export const createNewOrder = async (payload: Partial<Order>) => {
+type NewOrderPayload = Partial<Omit<Order, 'items'>> & {
+  items?: Array<Pick<OrderItem, 'productId' | 'quantity'> & Partial<Pick<OrderItem, 'price'>>>;
+};
+
+export const createNewOrder = async (payload: NewOrderPayload) => {
   if (!payload.customerId || !Array.isArray(payload.items) || payload.items.length === 0) throw new Error('customerId e items son obligatorios');
 
-  const productIds = payload.items.map((i: OrderItem) => i.productId);
+  const productIds = payload.items.map((item) => item.productId);
   const productResult = await productRepo.getProductsByIds(productIds);
   
   // Crear mapa de productos con stock
@@ -39,7 +43,7 @@ export const createNewOrder = async (payload: Partial<Order>) => {
 
   // Validar stock disponible para cada producto
   const items: OrderItem[] = [];
-  for (const item of payload.items as OrderItem[]) {
+  for (const item of payload.items) {
     const product = productMap.get(item.productId);
     if (!product) throw new Error(`Producto ${item.productId} no encontrado`);
     

@@ -1,28 +1,40 @@
-import { query } from '../../shared/db';
+import { dbResult, getCollection } from '../../shared/db';
+import { enqueueOracleSync } from '../../shared/oracle-sync';
 import type { Order } from '../../shared/types';
 
+const orders = () => getCollection<Order>('orders');
+
 export const getAllOrders = async () => {
-  return query<Order>('SELECT * FROM orders ORDER BY created_at DESC');
+  const rows = await orders().find({}, { projection: { _id: 0 } }).sort({ createdAt: -1 }).toArray();
+  return dbResult(rows);
 };
 
 export const getOrderById = async (id: string) => {
-  return query<Order>('SELECT * FROM orders WHERE id = $1', [id]);
+  const order = await orders().findOne({ id }, { projection: { _id: 0 } });
+  return dbResult(order ? [order] : []);
 };
 
 export const createOrder = async (order: Order) => {
-  return query<Order>(
-    'INSERT INTO orders (id, customer_id, items, status, total, created_at, type, metadata) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-    [order.id, order.customerId, JSON.stringify(order.items), order.status, order.total, order.createdAt, order.type, order.metadata ? JSON.stringify(order.metadata) : null]
-  );
+  await orders().insertOne(order);
+  await enqueueOracleSync('orders', order.id);
+  return dbResult([order]);
 };
 
 export const updateOrder = async (id: string, order: Partial<Order>) => {
-  return query<Order>(
-    'UPDATE orders SET items = $1, status = $2, total = $3, type = $4, metadata = $5 WHERE id = $6 RETURNING *',
-    [JSON.stringify(order.items), order.status, order.total, order.type, order.metadata ? JSON.stringify(order.metadata) : null, id]
+  const fields = Object.fromEntries(
+    Object.entries(order).filter(([, value]) => value !== undefined)
   );
+  const updated = await orders().findOneAndUpdate(
+    { id },
+    { $set: fields },
+    { returnDocument: 'after', projection: { _id: 0 } }
+  );
+  if (updated) await enqueueOracleSync('orders', id);
+  return dbResult(updated ? [updated] : []);
 };
 
 export const deleteOrder = async (id: string) => {
-  return query<Order>('DELETE FROM orders WHERE id = $1 RETURNING *', [id]);
+  const deleted = await orders().findOneAndDelete({ id }, { projection: { _id: 0 } });
+  if (deleted) await enqueueOracleSync('orders', id);
+  return dbResult(deleted ? [deleted] : []);
 };
