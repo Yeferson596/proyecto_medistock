@@ -1,25 +1,51 @@
-import { query } from '../../shared/db';
+import { dbResult, getCollection } from '../../shared/db';
+import { enqueueOracleSync } from '../../shared/oracle-sync';
 import type { User } from '../../shared/types';
 
+type UserDocument = User & { password?: string };
+const users = () => getCollection<UserDocument>('users');
+const publicProjection = { _id: 0, password: 0 };
+
 export const getAllUsers = async () => {
-  return query<User>('SELECT id, name, email, role, institution FROM users ORDER BY name');
+  const rows = await users().find({}, { projection: publicProjection }).sort({ name: 1 }).toArray();
+  return dbResult(rows);
 };
 
 export const getUserById = async (id: string) => {
-  return query<User>('SELECT id, name, email, role, institution FROM users WHERE id = $1', [id]);
+  const user = await users().findOne({ id }, { projection: publicProjection });
+  return dbResult(user ? [user] : []);
 };
 
-export const createUser = async (user: Partial<User> & { passwordHash?: string }) => {
-  return query<User>(
-    'INSERT INTO users (id, name, email, role, institution, password) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, name, email, role, institution',
-    [user.id, user.name, user.email, user.role, user.institution ?? null, user.passwordHash ?? null]
+export const createUser = async (user: User & { passwordHash?: string }) => {
+  const document: UserDocument = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    ...(user.institution ? { institution: user.institution } : {}),
+    ...(user.passwordHash ? { password: user.passwordHash } : {})
+  };
+  await users().insertOne(document);
+  await enqueueOracleSync('users', document.id);
+  const { password: _password, ...publicUser } = document;
+  return dbResult<User>([publicUser]);
+};
+
+export const updateUser = async (id: string, user: Partial<User>) => {
+  const fields = Object.fromEntries(
+    Object.entries(user).filter(([, value]) => value !== undefined)
   );
-};
-
-export const updateUser = async (id: string, u: Partial<User>) => {
-  return query<User>('UPDATE users SET name = $1, email = $2, role = $3, institution = $4 WHERE id = $5 RETURNING id, name, email, role, institution', [u.name, u.email, u.role, u.institution, id]);
+  const updated = await users().findOneAndUpdate(
+    { id },
+    { $set: fields },
+    { returnDocument: 'after', projection: publicProjection }
+  );
+  if (updated) await enqueueOracleSync('users', id);
+  return dbResult(updated ? [updated] : []);
 };
 
 export const deleteUser = async (id: string) => {
-  return query<User>('DELETE FROM users WHERE id = $1 RETURNING id, name, email, role, institution', [id]);
+  const deleted = await users().findOneAndDelete({ id }, { projection: publicProjection });
+  if (deleted) await enqueueOracleSync('users', id);
+  return dbResult(deleted ? [deleted] : []);
 };

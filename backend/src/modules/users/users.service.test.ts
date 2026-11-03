@@ -35,7 +35,7 @@ describe('Users Service', () => {
   it('createNewUser crea usuario con password hash', async () => {
     vi.mocked(repo.getUserById).mockResolvedValue({ rowCount: 0 } as any);
     vi.mocked(repo.createUser).mockResolvedValue({ rows: [{ id: 'u002', name: 'Nuevo', email: 'new@medistock.com', role: 'customer' }], rowCount: 1 } as any);
-    vi.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-pass');
+    vi.spyOn(bcrypt, 'hash').mockImplementation(async () => 'hashed-pass');
 
     const result = await service.createNewUser({ name: 'Nuevo', email: 'new@medistock.com', role: 'customer', password: 'pass123' });
 
