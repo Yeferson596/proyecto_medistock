@@ -8,7 +8,7 @@ Validar funcionalidad, seguridad e integridad de la API backend según criterios
 - Casos críticos: validación de stock, acceso a /bank/balance, creación/actualización de pedidos
 
 ## 3. Descripción del sistema
-Node.js + TypeScript, Express, Postgres (via `pg`), JWT auth, servicios organizados por módulos.
+Node.js + TypeScript, Express, MongoDB como base principal, réplica Oracle opcional, autenticación JWT y servicios organizados por módulos.
 
 ## 4. Resumen de pruebas
 - Unitarias: servicios y repositorios (Vitest)
@@ -16,15 +16,23 @@ Node.js + TypeScript, Express, Postgres (via `pg`), JWT auth, servicios organiza
 - Seguridad: endpoints protegidos (`requireAuth`) y validaciones de entrada
 
 ## 5. Entorno de pruebas
-- Requisitos: Node 18+, npm
-- Variables de entorno: `DATABASE_URL` (puede ser dummy para tests unitarios)
+- Requisitos: Node 18+, npm y MongoDB para ejecutar el servidor. Oracle solo es necesario para validar la réplica.
+- Variables de entorno: `MONGODB_URI` y `MONGODB_DB_NAME`; configura `ORACLE_USER`, `ORACLE_PASSWORD` y `ORACLE_CONNECT_STRING` solo al validar Oracle. Las pruebas unitarias no requieren conexiones reales a las bases de datos.
 - Comandos principales:
 ```
 cd backend
 npm install
-$env:DATABASE_URL = 'postgres://user:pass@localhost:5432/testdb'
 npm test
 ```
+
+### Comprobación manual opcional de Oracle
+
+1. Ejecuta `db/oracle-schema.sql` una sola vez en un esquema Oracle nuevo.
+2. Configura las tres variables `ORACLE_*` e inicia el backend con MongoDB disponible.
+3. Comprueba que se copien los datos iniciales a Oracle y que una escritura posterior de la API también se replique.
+4. Comprueba que un fallo temporal de Oracle deje eventos pendientes en `oracle_sync_outbox` y que se procesen al recuperar la conexión.
+
+Esta comprobación requiere Oracle configurado y no forma parte de las 40 pruebas automatizadas.
 
 ## 6. Plan y calendario
 - Desarrollo y fixes: ya realizados (ver registro de commits)
