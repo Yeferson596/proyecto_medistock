@@ -8,7 +8,7 @@ El backend está organizado en módulos por dominio, con separación de responsa
 
 - `routes`: define los endpoints HTTP y maneja solicitudes/respuestas.
 - `service`: contiene la lógica de negocio y validaciones.
-- `repository`: encapsula las consultas SQL y el acceso a PostgreSQL.
+- `repository`: encapsula el acceso a las colecciones MongoDB.
 - `shared`: agrupa utilidades comunes, tipos, autenticación y conexión a la base de datos.
 
 Los módulos principales son:
@@ -28,7 +28,8 @@ Esta estructura permite que la lógica de negocio sea reutilizable, testeable y 
 - Node.js
 - TypeScript
 - Express
-- PostgreSQL con `pg`
+- MongoDB con el driver oficial de Node.js
+- Oracle Database con `node-oracledb` para réplica y procedimientos PL/SQL
 - `jsonwebtoken` para JWT
 - `bcrypt` para hash de contraseñas
 - `swagger-ui-express` para documentación OpenAPI
@@ -39,9 +40,11 @@ Esta estructura permite que la lógica de negocio sea reutilizable, testeable y 
 
 1. cd backend
 2. npm install
-3. Copia `backend/.env.example` a `backend/.env`
-4. Configura `DATABASE_URL` con PostgreSQL y agrega un `JWT_SECRET` válido
-5. npm run dev
+3. Copia `.env.example` como `.env`
+4. Configura `MONGODB_URI`, `MONGODB_DB_NAME` y un `JWT_SECRET` válido.
+5. Antes del primer arranque, configura temporalmente `MONGODB_SCHEMA_URI` con un usuario Atlas que pueda administrar la base `medistock` y ejecuta `npm run db:setup`.
+6. (Opcional) En un esquema Oracle nuevo, ejecuta `db/oracle-schema.sql` como script y configura `ORACLE_USER`, `ORACLE_PASSWORD` y `ORACLE_CONNECT_STRING`.
+7. Ejecuta `npm run dev`. La cuenta normal de MongoDB solo necesita permisos de lectura/escritura; el usuario Oracle debe poder conectarse, modificar las tablas y ejecutar `MEDISTOCK_SINCRONIZACION`.
 
 ## Variables de entorno
 
@@ -49,13 +52,37 @@ Esta estructura permite que la lógica de negocio sea reutilizable, testeable y 
 - `APP_URL`: URL del frontend para las redirecciones de Mercado Pago
 - `MP_CURRENCY`: moneda por defecto para Mercado Pago (`CLP`)
 - `MP_ACCESS_TOKEN`: Access Token de Mercado Pago
-- `DATABASE_URL`: conexión a PostgreSQL
+- `MONGODB_URI`: URI de conexión a MongoDB (por defecto `mongodb://127.0.0.1:27017`)
+- `MONGODB_DB_NAME`: nombre de la base de datos (por defecto `medistock`)
+- `MONGODB_SCHEMA_URI`: URI temporal para `npm run db:setup`; usa un usuario con permisos administrativos solo sobre `medistock` y bórrala después.
+- `ORACLE_USER`, `ORACLE_PASSWORD`, `ORACLE_CONNECT_STRING`: credenciales y cadena de conexión Oracle. Si se dejan vacías, el backend continúa usando MongoDB sin réplica Oracle.
 - `JWT_SECRET`: secreto para firmar tokens JWT
 
 ## Base de datos
 
-- El backend usa PostgreSQL
-- El esquema inicial se encuentra en `backend/db/schema.sql`
+- MongoDB es la fuente de verdad de la API. `npm run db:setup` crea o actualiza los validadores `$jsonSchema` de las colecciones, incluido el outbox de sincronización; requiere permisos administrativos de base de datos.
+- El backend comprueba que esos validadores estén configurados y prepara los índices al iniciar. La URI administrativa solo se usa para la configuración inicial; no hace falta dejarla en el entorno de ejecución.
+- Las colecciones (`users`, `products`, `orders`, `bank_accounts`, `bank_transactions`, `stock_alerts` y `oracle_sync_outbox`) se definen en `backend/src/shared/mongo-schema.ts`.
+- Al configurar las tres variables `ORACLE_*`, el backend reemplaza el contenido de las tablas Oracle con una copia inicial de MongoDB y replica las escrituras posteriores mediante un outbox persistente. Los eventos fallidos se conservan y se reintentan; sin esas variables, la API funciona únicamente con MongoDB.
+- El esquema Oracle, comentado línea por línea, y el paquete PL/SQL `MEDISTOCK_SINCRONIZACION.APLICAR_CAMBIO` están en `backend/db/oracle-schema.sql`. El script crea las tablas e índices relacionales, y debe ejecutarse una sola vez en un esquema Oracle nuevo antes de habilitar la réplica. MongoDB conserva los artículos y metadatos embebidos; Oracle normaliza las líneas de pedidos en `MED_DETALLE_PEDIDOS`.
+- Los usuarios se sincronizan con el hash bcrypt (`HASH_CONTRASENA`), nunca con la contraseña en texto plano.
+- Oracle es una réplica de consulta y práctica PL/SQL, no una base de escritura de la API. Sus tablas se reconstruyen al iniciar el backend y sus cambios manuales pueden ser reemplazados por la sincronización.
+- La carpeta `backend/db` contiene el esquema MongoDB en `schema.json` y el esquema relacional/paquete PL/SQL en `oracle-schema.sql`; los scripts de configuración están separados en `backend/scripts`.
+- Las órdenes guardan sus artículos y metadatos embebidos como documentos.
+- Los datos que existían en PostgreSQL no se copian automáticamente; haz una copia de seguridad y migra los registros por separado si necesitas conservarlos.
+- El modelo, las relaciones por referencia/embebidas, el trigger de stock bajo y ejemplos de bloques anónimos/ciclos están en [Modelo NoSQL](backend/docs/Modelo_NoSQL.md). El trigger requiere configuración manual en Atlas.
+- La configuración Oracle, las tablas, el paquete de sincronización y ejemplos de PL/SQL están en [Guía Oracle y PL/SQL](backend/docs/Oracle.md).
+
+## Informe de cambios y pruebas
+
+La migración de PostgreSQL a MongoDB Atlas, los cambios técnicos y las validaciones están documentados en:
+
+- [Informe de cambios](backend/docs/Presentacion.md)
+- [Evidencias de ejecución](backend/docs/Evidencias.md)
+- [Plan de pruebas](backend/docs/Plan_de_Pruebas.md)
+- [Registro de defectos](backend/docs/Registro_Defectos.csv)
+
+Verificación registrada: compilación TypeScript exitosa y 40 pruebas aprobadas. La réplica Oracle requiere credenciales y una instancia Oracle; su configuración y validación se describen en la [Guía Oracle y PL/SQL](backend/docs/Oracle.md).
 
 ## Documentación de la API
 
