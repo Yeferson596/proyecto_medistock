@@ -1,36 +1,60 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { query } from '../../shared/db';
-import * as repo from './products.repository';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  getCollection: vi.fn(),
+  find: vi.fn(),
+  sort: vi.fn(),
+  toArray: vi.fn(),
+  findOne: vi.fn(),
+  insertOne: vi.fn(),
+  findOneAndUpdate: vi.fn(),
+  findOneAndDelete: vi.fn()
+}));
 
 vi.mock('../../shared/db', () => ({
-  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
-  pool: { query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }), connect: vi.fn() }
+  getCollection: mocks.getCollection,
+  dbResult: (rows: unknown[]) => ({ rows, rowCount: rows.length })
 }));
+
+import * as repo from './products.repository';
 
 describe('Products Repository', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getCollection.mockReturnValue({
+      find: mocks.find,
+      findOne: mocks.findOne,
+      insertOne: mocks.insertOne,
+      findOneAndUpdate: mocks.findOneAndUpdate,
+      findOneAndDelete: mocks.findOneAndDelete
+    });
   });
 
-  it('getAllProducts ejecuta la consulta correcta', async () => {
-    vi.mocked(query).mockResolvedValue({ rows: [{ id: 'p001', name: 'Teste', sku: 'TST', description: 'desc', price: 10, category: 'cat', stock: 5, min_stock: 0, image: 'img' }], rowCount: 1 } as any);
+  it('lista productos ordenados por nombre', async () => {
+    const products = [{ id: 'p001', name: 'Producto' }];
+    mocks.find.mockReturnValue({ sort: mocks.sort });
+    mocks.sort.mockReturnValue({ toArray: mocks.toArray });
+    mocks.toArray.mockResolvedValue(products);
 
     const result = await repo.getAllProducts();
 
-    expect(query).toHaveBeenCalledWith('SELECT * FROM products ORDER BY name');
-    expect(result.rows[0].id).toBe('p001');
+    expect(mocks.getCollection).toHaveBeenCalledWith('products');
+    expect(mocks.find).toHaveBeenCalledWith({}, { projection: { _id: 0 } });
+    expect(mocks.sort).toHaveBeenCalledWith({ name: 1 });
+    expect(result.rows).toEqual(products);
   });
 
-  it('getProductById consulta por id', async () => {
-    vi.mocked(query).mockResolvedValue({ rows: [{ id: 'p002', name: 'Otro', sku: 'OTR' }], rowCount: 1 } as any);
+  it('busca producto por id', async () => {
+    const product = { id: 'p002', name: 'Otro' };
+    mocks.findOne.mockResolvedValue(product);
 
     const result = await repo.getProductById('p002');
 
-    expect(query).toHaveBeenCalledWith('SELECT * FROM products WHERE id = $1', ['p002']);
-    expect(result.rows[0].name).toBe('Otro');
+    expect(mocks.findOne).toHaveBeenCalledWith({ id: 'p002' }, { projection: { _id: 0 } });
+    expect(result.rows[0]).toEqual(product);
   });
 
-  it('createProduct inserta producto en BD', async () => {
+  it('crea producto', async () => {
     const product = {
       id: 'p010',
       name: 'Nuevo',
@@ -42,35 +66,34 @@ describe('Products Repository', () => {
       minStock: 1,
       image: 'img'
     };
-    vi.mocked(query).mockResolvedValue({ rows: [product], rowCount: 1 } as any);
 
-    const result = await repo.createProduct(product as any);
+    const result = await repo.createProduct(product);
 
-    expect(query).toHaveBeenCalledWith(
-      'INSERT INTO products (id, name, sku, description, price, category, stock, min_stock, image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-      [product.id, product.name, product.sku, product.description, product.price, product.category, product.stock, product.minStock, product.image]
-    );
-    expect(result.rows[0].id).toBe('p010');
+    expect(mocks.insertOne).toHaveBeenCalledWith(product);
+    expect(result.rows[0]).toEqual(product);
   });
 
-  it('updateProduct actualiza el registro', async () => {
-    vi.mocked(query).mockResolvedValue({ rows: [{ id: 'p010', name: 'Cambiado' }], rowCount: 1 } as any);
+  it('actualiza solo los campos definidos', async () => {
+    const product = { id: 'p010', name: 'Cambiado' };
+    mocks.findOneAndUpdate.mockResolvedValue(product);
 
-    const result = await repo.updateProduct('p010', { name: 'Cambiado' } as any);
+    const result = await repo.updateProduct('p010', { name: 'Cambiado', sku: undefined });
 
-    expect(query).toHaveBeenCalledWith(
-      'UPDATE products SET name = $1, sku = $2, description = $3, price = $4, category = $5, stock = $6, min_stock = $7, image = $8 WHERE id = $9 RETURNING *',
-      ['Cambiado', undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'p010']
+    expect(mocks.findOneAndUpdate).toHaveBeenCalledWith(
+      { id: 'p010' },
+      { $set: { name: 'Cambiado' } },
+      { returnDocument: 'after', projection: { _id: 0 } }
     );
-    expect(result.rows[0].name).toBe('Cambiado');
+    expect(result.rows[0]).toEqual(product);
   });
 
-  it('deleteProduct borra el producto', async () => {
-    vi.mocked(query).mockResolvedValue({ rows: [{ id: 'p010' }], rowCount: 1 } as any);
+  it('elimina producto por id', async () => {
+    const product = { id: 'p010' };
+    mocks.findOneAndDelete.mockResolvedValue(product);
 
     const result = await repo.deleteProduct('p010');
 
-    expect(query).toHaveBeenCalledWith('DELETE FROM products WHERE id = $1 RETURNING *', ['p010']);
-    expect(result.rows[0].id).toBe('p010');
+    expect(mocks.findOneAndDelete).toHaveBeenCalledWith({ id: 'p010' }, { projection: { _id: 0 } });
+    expect(result.rows[0]).toEqual(product);
   });
 });

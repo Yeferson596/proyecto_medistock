@@ -10,7 +10,7 @@ const mapProductRow = (row: any): Product => ({
   price: Number(row.price),
   category: row.category,
   stock: Number(row.stock),
-  minStock: Number(row.min_stock),
+  minStock: Number(row.minStock ?? row.min_stock),
   image: row.image
 });
 
