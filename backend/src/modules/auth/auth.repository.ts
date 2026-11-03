@@ -1,13 +1,19 @@
-import { query } from '../../shared/db';
+import { dbResult, getCollection } from '../../shared/db';
+import { enqueueOracleSync } from '../../shared/oracle-sync';
 import type { User } from '../../shared/types';
 
+type UserDocument = User & { password: string };
+const users = () => getCollection<UserDocument>('users');
+
 export const getUserByEmail = async (email: string) => {
-  return query<User>('SELECT * FROM users WHERE email = $1', [email]);
+  const user = await users().findOne({ email }, { projection: { _id: 0 } });
+  return dbResult(user ? [user] : []);
 };
 
 export const createUser = async (user: User & { passwordHash: string }) => {
-  return query<User>(
-    'INSERT INTO users (id, name, email, role, institution, password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, email, role, institution',
-    [user.id, user.name, user.email, user.role, user.institution ?? null, user.passwordHash]
-  );
+  const { passwordHash, ...publicUser } = user;
+  const document: UserDocument = { ...publicUser, password: passwordHash };
+  await users().insertOne(document);
+  await enqueueOracleSync('users', document.id);
+  return dbResult<User>([publicUser]);
 };
